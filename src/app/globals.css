@@ -63,6 +63,127 @@ body {
   }
 }
 
+@keyframes capsule-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes capsule-float {
+  0%,
+  100% {
+    transform: translateY(-6px);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes capsule-shadow {
+  0%,
+  100% {
+    transform: scale(1.05);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.2;
+  }
+}
+
+.capsule-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 140px;
+  height: 160px;
+  perspective: 640px;
+}
+
+.capsule-float {
+  animation: capsule-float 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.capsule-tilt {
+  position: relative;
+  transform: rotateX(14deg) rotateZ(-24deg);
+  transform-style: preserve-3d;
+}
+
+.capsule-spin {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: capsule-spin 7s linear infinite;
+}
+
+.capsule-panel {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  border-radius: 999px;
+  background:
+    linear-gradient(to bottom, #e11d48 0%, #e11d48 49.5%, #f8fafc 50.5%, #f8fafc 100%);
+}
+
+.capsule-shade {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  height: 104px;
+  width: 53px;
+  margin-left: -26.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    rgba(15, 23, 42, 0.3) 0%,
+    rgba(15, 23, 42, 0) 40%,
+    rgba(255, 255, 255, 0.16) 64%,
+    rgba(15, 23, 42, 0.26) 100%
+  );
+  transform: translateZ(22px);
+}
+
+.capsule-gloss {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  height: 76px;
+  width: 9px;
+  margin-left: -18px;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.05));
+  filter: blur(1.5px);
+  transform: translateZ(30px);
+}
+
+.capsule-seam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 5px;
+  width: 53px;
+  margin-left: -26.5px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.22);
+  transform: translateZ(28px);
+}
+
+.capsule-shadow {
+  position: absolute;
+  bottom: 6px;
+  height: 12px;
+  width: 74px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.45);
+  filter: blur(7px);
+  animation: capsule-shadow 4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
