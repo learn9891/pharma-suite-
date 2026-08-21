@@ -3,25 +3,357 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f7fafc;
+  --foreground: #0f172a;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1100px 520px at 12% -10%, rgba(13, 148, 136, 0.16), transparent 60%),
+    radial-gradient(900px 480px at 92% 0%, rgba(59, 130, 246, 0.14), transparent 55%),
+    var(--background);
+  background-attachment: fixed;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .card {
+    @apply rounded-xl border border-white/70 bg-white/80 shadow-sm backdrop-blur transition duration-300;
+  }
+
+  .card-hover {
+    @apply hover:-translate-y-1 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-900/5;
+  }
+
+  .row-hover {
+    @apply transition-colors duration-200 hover:bg-teal-50/60;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-teal-600 via-teal-500 to-sky-500 bg-clip-text text-transparent;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-gradient-to-r from-teal-600 to-teal-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition duration-200 hover:from-teal-700 hover:to-teal-600 hover:shadow-md active:scale-[0.98] disabled:opacity-60 disabled:hover:shadow-sm;
+  }
+
+  .btn-ghost {
+    @apply rounded-lg border border-slate-300 bg-white/70 px-4 py-2 text-sm font-medium text-slate-700 transition duration-200 hover:border-teal-400 hover:text-teal-700 active:scale-[0.98];
+  }
+
+  .field {
+    @apply mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 transition duration-200 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30;
+  }
+
+  .skeleton-shimmer::after {
+    content: "";
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+@keyframes capsule-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes capsule-float {
+  0%,
+  100% {
+    transform: translateY(-6px);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes capsule-shadow {
+  0%,
+  100% {
+    transform: scale(1.05);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.2;
+  }
+}
+
+.capsule-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 140px;
+  height: 160px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  perspective: 640px;
+  cursor: pointer;
+  appearance: none;
+}
+
+.capsule-stage:focus-visible {
+  outline: 2px solid #0d9488;
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+.capsule-float {
+  animation: capsule-float 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.capsule-tilt {
+  position: relative;
+  transform: rotateX(14deg) rotateZ(-24deg);
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.capsule-open .capsule-tilt {
+  transform: rotateX(6deg) rotateZ(-14deg) scale(1.06);
+}
+
+.capsule-spin {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: capsule-spin 7s linear infinite;
+}
+
+.capsule-open .capsule-spin {
+  animation-duration: 2.6s;
+}
+
+/* Each half owns its own barrel of panels so the shell can split apart. */
+.capsule-half {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.capsule-half-top,
+.capsule-shell-top {
+  transform-origin: 0 52px;
+}
+
+.capsule-half-bottom,
+.capsule-shell-bottom {
+  transform-origin: 0 51px;
+}
+
+.capsule-open .capsule-half-top {
+  transform: translateY(-30px) rotateZ(9deg);
+}
+
+.capsule-open .capsule-half-bottom {
+  transform: translateY(30px) rotateZ(-9deg);
+}
+
+/* Only the outer end of a panel is rounded, so the seam stays a straight line. */
+.capsule-panel {
+  position: absolute;
+  left: 50%;
+}
+
+.capsule-panel-top {
+  top: 0;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(to bottom, #f43f5e, #e11d48);
+}
+
+.capsule-panel-bottom {
+  top: 51px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(to bottom, #ffffff, #e2e8f0);
+}
+
+/* Static lighting lives outside the spinning barrel, but still splits with it. */
+.capsule-shell {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.capsule-open .capsule-shell-top {
+  transform: translateY(-30px) rotateZ(9deg);
+}
+
+.capsule-open .capsule-shell-bottom {
+  transform: translateY(30px) rotateZ(-9deg);
+}
+
+.capsule-shade {
+  position: absolute;
+  left: 50%;
+  height: 53px;
+  width: 53px;
+  margin-left: -26.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    rgba(15, 23, 42, 0.3) 0%,
+    rgba(15, 23, 42, 0) 40%,
+    rgba(255, 255, 255, 0.16) 64%,
+    rgba(15, 23, 42, 0.26) 100%
+  );
+  transform: translateZ(22px);
+}
+
+.capsule-shell-top .capsule-shade {
+  top: 0;
+}
+
+.capsule-shell-bottom .capsule-shade {
+  top: 51px;
+}
+
+.capsule-gloss {
+  position: absolute;
+  left: 50%;
+  height: 36px;
+  width: 9px;
+  margin-left: -18px;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.05));
+  filter: blur(1.5px);
+  transform: translateZ(30px);
+}
+
+.capsule-shell-top .capsule-gloss {
+  top: 14px;
+}
+
+.capsule-shell-bottom .capsule-gloss {
+  top: 56px;
+}
+
+.capsule-seam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 5px;
+  width: 53px;
+  margin-left: -26.5px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.22);
+  transform: translateZ(28px);
+  transition: opacity 300ms ease;
+}
+
+.capsule-open .capsule-seam {
+  opacity: 0;
+}
+
+.capsule-grain {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 8px;
+  width: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #fef3c7, #f59e0b 70%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.3);
+  transition:
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 320ms ease;
+}
+
+.capsule-open .capsule-grain {
+  opacity: 1;
+  transform: translate3d(var(--gx), var(--gy), var(--gz)) scale(1);
+}
+
+.capsule-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 96px;
+  width: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.35), rgba(13, 148, 136, 0) 70%);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 400ms ease,
+    transform 500ms ease;
+}
+
+.capsule-open .capsule-glow {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.capsule-hint {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.45);
+  transition: opacity 300ms ease;
+}
+
+.capsule-open .capsule-hint {
+  opacity: 0;
+}
+
+.capsule-shadow {
+  position: absolute;
+  bottom: 6px;
+  height: 12px;
+  width: 74px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.45);
+  filter: blur(7px);
+  animation: capsule-shadow 4s ease-in-out infinite;
+  transition: width 500ms ease;
+}
+
+.capsule-open .capsule-shadow {
+  width: 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff;
   }
 }
