@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PharmaSuite
 
-## Getting Started
+Retail pharmacy operations app: stock, prescription analysis, an AI pharma assistant and GST billing.
 
-First, run the development server:
+## Modules
+
+- **Dashboard** (`/`) — stock value, low-stock and expiry watchlists, today's sales, recent invoices.
+- **Stock** (`/stock`) — add/delete medicines, quick stock adjustments, search, low-stock and expiry filters. Tracks batch, HSN, MRP, GST rate, reorder level, expiry and Rx flag.
+- **Prescription analyser** (`/prescriptions`) — parses free-text prescriptions line by line into molecule, strength, frequency and duration; computes the quantity to dispense; flags interactions, duplicate therapy, dose-limit breaches and missing directions; matches every line against live stock.
+- **AI assistant** (`/assistant`) — chat for dosing, interactions, storage and regulatory questions, grounded in current stock. Uses OpenAI when `OPENAI_API_KEY` is set, otherwise a built-in pharmacy rule engine so the feature works offline.
+- **Billing** (`/billing`) — search stock, build a cart, apply discount, per-item GST, invoice generation with stock decrement in a transaction, printable invoice at `/billing/<id>`.
+
+## Stack
+
+Next.js 14 (App Router) · TypeScript · Tailwind CSS · Prisma · SQLite · Zod
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env          # DATABASE_URL="file:./dev.db"
+npx prisma migrate dev
+npx tsx prisma/seed.ts        # 20 sample medicines
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`, default `gpt-4o-mini`) in `.env` to enable LLM answers in the assistant.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET/POST | `/api/medicines` | list (`?q=`) / create |
+| PATCH/DELETE | `/api/medicines/:id` | update / delete |
+| GET/POST | `/api/prescriptions` | history / analyse and store |
+| POST | `/api/agent` | assistant reply, `{ answer, engine }` |
+| GET/POST | `/api/sales` | invoice list / create invoice |
 
-## Learn More
+## Clinical data
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`src/lib/drug-knowledge.ts` holds the local formulary (21 molecules with brands, class, adult dose, daily maximum, cautions) and the interaction rules. Extend those arrays to widen coverage. The output is decision support only — a pharmacist must confirm every clinical decision.

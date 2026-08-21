@@ -1,101 +1,100 @@
-import Image from "next/image";
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { inr, shortDate } from "@/lib/format";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const soon = new Date(Date.now() + 90 * 86_400_000);
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const [medicines, expiring, todaySales, recentSales] = await Promise.all([
+    prisma.medicine.findMany({ orderBy: { stockQty: "asc" } }),
+    prisma.medicine.findMany({ where: { expiryDate: { lte: soon } }, orderBy: { expiryDate: "asc" }, take: 6 }),
+    prisma.sale.findMany({ where: { createdAt: { gte: startOfToday } } }),
+    prisma.sale.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+  ]);
+
+  const lowStock = medicines.filter((medicine) => medicine.stockQty <= medicine.reorderLevel);
+  const stockValue = medicines.reduce((sum, medicine) => sum + medicine.unitPrice * medicine.stockQty, 0);
+  const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total, 0);
+
+  const cards = [
+    { label: "SKUs in catalogue", value: String(medicines.length), href: "/stock" },
+    { label: "Low stock items", value: String(lowStock.length), href: "/stock?filter=low" },
+    { label: "Expiring in 90 days", value: String(expiring.length), href: "/stock?filter=expiring" },
+    { label: "Sales today", value: inr(todayRevenue), href: "/billing" },
+  ];
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold">Pharmacy dashboard</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Inventory value on shelf: <span className="font-medium">{inr(stockValue)}</span>
+        </p>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => (
+          <Link
+            key={card.label}
+            href={card.href}
+            className="rounded-lg border border-slate-200 bg-white p-4 transition hover:border-teal-500"
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <p className="text-xs uppercase tracking-wide text-slate-500">{card.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{card.value}</p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="rounded-lg border border-slate-200 bg-white p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Reorder now</h2>
+          <ul className="mt-3 divide-y divide-slate-100 text-sm">
+            {lowStock.slice(0, 6).map((medicine) => (
+              <li key={medicine.id} className="flex justify-between py-2">
+                <span>{medicine.name}</span>
+                <span className="font-medium text-rose-600">
+                  {medicine.stockQty} left / reorder at {medicine.reorderLevel}
+                </span>
+              </li>
+            ))}
+            {lowStock.length === 0 && <li className="py-2 text-slate-500">Every item is above its reorder level.</li>}
+          </ul>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Expiry watchlist</h2>
+          <ul className="mt-3 divide-y divide-slate-100 text-sm">
+            {expiring.map((medicine) => (
+              <li key={medicine.id} className="flex justify-between py-2">
+                <span>
+                  {medicine.name} <span className="text-slate-500">batch {medicine.batchNo}</span>
+                </span>
+                <span className="font-medium text-amber-600">{shortDate(medicine.expiryDate)}</span>
+              </li>
+            ))}
+            {expiring.length === 0 && <li className="py-2 text-slate-500">No batch expires in the next 90 days.</li>}
+          </ul>
+        </section>
+      </div>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Recent invoices</h2>
+        <ul className="mt-3 divide-y divide-slate-100 text-sm">
+          {recentSales.map((sale) => (
+            <li key={sale.id} className="flex justify-between py-2">
+              <Link href={`/billing/${sale.id}`} className="text-teal-700 hover:underline">
+                {sale.invoiceNo} — {sale.customerName}
+              </Link>
+              <span className="font-medium">{inr(sale.total)}</span>
+            </li>
+          ))}
+          {recentSales.length === 0 && <li className="py-2 text-slate-500">No invoices yet.</li>}
+        </ul>
+      </section>
     </div>
   );
 }

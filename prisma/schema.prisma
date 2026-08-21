@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Medicine {
+  id           String     @id @default(cuid())
+  name         String
+  genericName  String
+  manufacturer String
+  category     String
+  batchNo      String
+  hsnCode      String     @default("3004")
+  unitPrice    Float
+  gstRate      Float      @default(12)
+  stockQty     Int        @default(0)
+  reorderLevel Int        @default(20)
+  expiryDate   DateTime
+  rxRequired   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  saleItems    SaleItem[]
+
+  @@index([name])
+}
+
+model Sale {
+  id           String     @id @default(cuid())
+  invoiceNo    String     @unique
+  customerName String
+  customerPhone String?
+  doctorName   String?
+  subtotal     Float
+  gstAmount    Float
+  discount     Float      @default(0)
+  total        Float
+  paymentMode  String     @default("CASH")
+  createdAt    DateTime   @default(now())
+  items        SaleItem[]
+}
+
+model SaleItem {
+  id         String   @id @default(cuid())
+  saleId     String
+  medicineId String
+  name       String
+  batchNo    String
+  quantity   Int
+  unitPrice  Float
+  gstRate    Float
+  lineTotal  Float
+  sale       Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  medicine   Medicine @relation(fields: [medicineId], references: [id])
+}
+
+model Prescription {
+  id          String   @id @default(cuid())
+  patientName String
+  doctorName  String?
+  rawText     String
+  analysis    String
+  createdAt   DateTime @default(now())
+}
