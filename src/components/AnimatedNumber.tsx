@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { inr } from "@/lib/format";
+
+export type NumberFormat = "count" | "currency";
 
 export default function AnimatedNumber({
   value,
-  format,
+  format = "count",
   duration = 900,
 }: {
   value: number;
-  format?: (value: number) => string;
+  format?: NumberFormat;
   duration?: number;
 }) {
   const [display, setDisplay] = useState(0);
@@ -34,5 +37,7 @@ export default function AnimatedNumber({
     return () => cancelAnimationFrame(frame);
   }, [value, duration]);
 
-  return <span>{format ? format(display) : Math.round(display).toLocaleString("en-IN")}</span>;
+  return (
+    <span>{format === "currency" ? inr(display) : Math.round(display).toLocaleString("en-IN")}</span>
+  );
 }

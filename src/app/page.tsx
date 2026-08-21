@@ -41,7 +41,7 @@ export default async function DashboardPage() {
           <p className="mt-3 max-w-2xl text-sm text-white/85">
             Inventory on shelf is worth{" "}
             <span className="font-semibold">
-              <AnimatedNumber value={stockValue} format={inr} />
+              <AnimatedNumber value={stockValue} format="currency" />
             </span>
             . Track stock, analyse prescriptions, ask the assistant and bill with GST — without leaving the app.
           </p>

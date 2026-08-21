@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import AnimatedNumber from "@/components/AnimatedNumber";
-import { inr } from "@/lib/format";
 
 export type Stat = {
   label: string;
@@ -29,7 +28,7 @@ export default function StatCard({ stat, index }: { stat: Stat; index: number })
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${TONE[stat.tone].wash}`} />
       <p className="relative text-xs uppercase tracking-wide text-slate-500">{stat.label}</p>
       <p className={`relative mt-2 text-2xl font-semibold ${TONE[stat.tone].text}`}>
-        <AnimatedNumber value={stat.value} format={stat.kind === "currency" ? inr : undefined} />
+        <AnimatedNumber value={stat.value} format={stat.kind === "currency" ? "currency" : "count"} />
       </p>
       <span className="relative mt-2 inline-block text-xs text-slate-500 opacity-0 transition duration-300 group-hover:opacity-100">
         View details →

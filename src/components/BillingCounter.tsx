@@ -263,7 +263,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
             <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold">
               <dt>Total</dt>
               <dd className="text-teal-700">
-                <AnimatedNumber value={totals.total} format={inr} duration={500} />
+                <AnimatedNumber value={totals.total} format="currency" duration={500} />
               </dd>
             </div>
           </dl>
