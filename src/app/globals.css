@@ -100,7 +100,18 @@ body {
   place-items: center;
   width: 140px;
   height: 160px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   perspective: 640px;
+  cursor: pointer;
+  appearance: none;
+}
+
+.capsule-stage:focus-visible {
+  outline: 2px solid #0d9488;
+  outline-offset: 4px;
+  border-radius: 16px;
 }
 
 .capsule-float {
@@ -112,6 +123,11 @@ body {
   position: relative;
   transform: rotateX(14deg) rotateZ(-24deg);
   transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.capsule-open .capsule-tilt {
+  transform: rotateX(6deg) rotateZ(-14deg) scale(1.06);
 }
 
 .capsule-spin {
@@ -120,20 +136,74 @@ body {
   animation: capsule-spin 7s linear infinite;
 }
 
+.capsule-open .capsule-spin {
+  animation-duration: 2.6s;
+}
+
+/* Each half owns its own barrel of panels so the shell can split apart. */
+.capsule-half {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.capsule-half-top,
+.capsule-shell-top {
+  transform-origin: 0 52px;
+}
+
+.capsule-half-bottom,
+.capsule-shell-bottom {
+  transform-origin: 0 51px;
+}
+
+.capsule-open .capsule-half-top {
+  transform: translateY(-30px) rotateZ(9deg);
+}
+
+.capsule-open .capsule-half-bottom {
+  transform: translateY(30px) rotateZ(-9deg);
+}
+
 .capsule-panel {
   position: absolute;
   left: 50%;
-  top: 0;
   border-radius: 999px;
-  background:
-    linear-gradient(to bottom, #e11d48 0%, #e11d48 49.5%, #f8fafc 50.5%, #f8fafc 100%);
+}
+
+.capsule-panel-top {
+  top: 0;
+  background: linear-gradient(to bottom, #f43f5e, #e11d48);
+}
+
+.capsule-panel-bottom {
+  top: 51px;
+  background: linear-gradient(to bottom, #ffffff, #e2e8f0);
+}
+
+/* Static lighting lives outside the spinning barrel, but still splits with it. */
+.capsule-shell {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.capsule-open .capsule-shell-top {
+  transform: translateY(-30px) rotateZ(9deg);
+}
+
+.capsule-open .capsule-shell-bottom {
+  transform: translateY(30px) rotateZ(-9deg);
 }
 
 .capsule-shade {
   position: absolute;
   left: 50%;
-  top: 0;
-  height: 104px;
+  height: 53px;
   width: 53px;
   margin-left: -26.5px;
   border-radius: 999px;
@@ -147,17 +217,32 @@ body {
   transform: translateZ(22px);
 }
 
+.capsule-shell-top .capsule-shade {
+  top: 0;
+}
+
+.capsule-shell-bottom .capsule-shade {
+  top: 51px;
+}
+
 .capsule-gloss {
   position: absolute;
   left: 50%;
-  top: 14px;
-  height: 76px;
+  height: 36px;
   width: 9px;
   margin-left: -18px;
   border-radius: 999px;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.05));
   filter: blur(1.5px);
   transform: translateZ(30px);
+}
+
+.capsule-shell-top .capsule-gloss {
+  top: 14px;
+}
+
+.capsule-shell-bottom .capsule-gloss {
+  top: 56px;
 }
 
 .capsule-seam {
@@ -171,6 +256,72 @@ body {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.22);
   transform: translateZ(28px);
+  transition: opacity 300ms ease;
+}
+
+.capsule-open .capsule-seam {
+  opacity: 0;
+}
+
+.capsule-grain {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 8px;
+  width: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #fef3c7, #f59e0b 70%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.3);
+  transition:
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 320ms ease;
+}
+
+.capsule-open .capsule-grain {
+  opacity: 1;
+  transform: translate3d(var(--gx), var(--gy), var(--gz)) scale(1);
+}
+
+.capsule-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 96px;
+  width: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.35), rgba(13, 148, 136, 0) 70%);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 400ms ease,
+    transform 500ms ease;
+}
+
+.capsule-open .capsule-glow {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.capsule-hint {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.45);
+  transition: opacity 300ms ease;
+}
+
+.capsule-open .capsule-hint {
+  opacity: 0;
 }
 
 .capsule-shadow {
@@ -182,6 +333,11 @@ body {
   background: rgba(15, 23, 42, 0.45);
   filter: blur(7px);
   animation: capsule-shadow 4s ease-in-out infinite;
+  transition: width 500ms ease;
+}
+
+.capsule-open .capsule-shadow {
+  width: 96px;
 }
 
 @media (prefers-reduced-motion: reduce) {
