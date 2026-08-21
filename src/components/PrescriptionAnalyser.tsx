@@ -31,7 +31,8 @@ Dr. S. Iyer
 2. Tab Pantop 40 mg OD x 7 days
 3. Tab Ecosprin 75 mg OD
 4. Tab Brufen 400 mg TDS x 3 days
-5. Cap Warf 5 mg OD`;
+5. Cap Warf 5 mg OD
+6. Tab Omez 20 mg OD x 7 days`;
 
 const SEVERITY_STYLE = {
   high: "border-rose-200 bg-rose-50 text-rose-800 animate-pulse-ring",

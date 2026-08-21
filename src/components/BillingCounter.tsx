@@ -103,6 +103,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
     }
     const sale = (await response.json()) as { id: string };
     router.push(`/billing/${sale.id}`);
+    router.refresh();
   }
 
   return (

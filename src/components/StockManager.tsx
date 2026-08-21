@@ -89,6 +89,7 @@ export default function StockManager({
       return;
     }
     setMedicines((current) => current.map((item) => (item.id === medicine.id ? { ...item, stockQty } : item)));
+    flash(`${medicine.name} stock set to ${stockQty}`);
   }
 
   async function removeMedicine(id: string) {
