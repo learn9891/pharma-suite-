@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import { inr, shortDate, daysUntil } from "@/lib/format";
 import type { MedicineDTO } from "@/types";
+import Toast, { type ToastState } from "@/components/Toast";
+import Spinner from "@/components/Spinner";
+import AnimatedNumber from "@/components/AnimatedNumber";
 
 type Filter = "all" | "low" | "expiring";
 
@@ -34,6 +37,13 @@ export default function StockManager({
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  function flash(message: string, tone: "success" | "error" = "success") {
+    setToast({ message, tone });
+    window.setTimeout(() => setToast(null), 2600);
+  }
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -62,46 +72,65 @@ export default function StockManager({
     const created = (await response.json()) as MedicineDTO;
     setMedicines((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
     setForm(EMPTY_FORM);
+    flash(`${created.name} added to stock`);
   }
 
   async function adjustStock(medicine: MedicineDTO, delta: number) {
     const stockQty = Math.max(0, medicine.stockQty + delta);
+    setBusyId(medicine.id);
     const response = await fetch(`/api/medicines/${medicine.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stockQty }),
     });
-    if (!response.ok) return;
+    setBusyId(null);
+    if (!response.ok) {
+      flash("Stock update failed", "error");
+      return;
+    }
     setMedicines((current) => current.map((item) => (item.id === medicine.id ? { ...item, stockQty } : item)));
   }
 
   async function removeMedicine(id: string) {
+    setBusyId(id);
     const response = await fetch(`/api/medicines/${id}`, { method: "DELETE" });
-    if (!response.ok) return;
+    setBusyId(null);
+    if (!response.ok) {
+      flash("Could not delete this medicine", "error");
+      return;
+    }
     setMedicines((current) => current.filter((item) => item.id !== id));
+    flash("Medicine removed");
   }
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <Toast toast={toast} />
+      <div className="flex flex-wrap items-end justify-between gap-4 animate-fade-up">
         <div>
-          <h1 className="text-2xl font-semibold">Stock</h1>
-          <p className="mt-1 text-sm text-slate-600">{visible.length} of {medicines.length} SKUs shown</p>
+          <h1 className="text-2xl font-semibold">
+            <span className="gradient-text">Stock</span>
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            <AnimatedNumber value={visible.length} /> of {medicines.length} SKUs shown
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search name or molecule"
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 bg-white/80 px-3 py-2 text-sm transition duration-200 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
           />
           {(["all", "low", "expiring"] as Filter[]).map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => setFilter(option)}
-              className={`rounded px-3 py-2 text-sm font-medium ${
-                filter === option ? "bg-teal-700 text-white" : "border border-slate-300 bg-white text-slate-700"
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition duration-200 active:scale-95 ${
+                filter === option
+                  ? "bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-sm"
+                  : "border border-slate-300 bg-white/70 text-slate-700 hover:border-teal-400 hover:text-teal-700"
               }`}
             >
               {option === "all" ? "All" : option === "low" ? "Low stock" : "Expiring"}
@@ -110,9 +139,9 @@ export default function StockManager({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-slate-50/80 text-left text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Medicine</th>
               <th className="px-4 py-3">Batch</th>
@@ -124,17 +153,25 @@ export default function StockManager({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {visible.map((medicine) => {
+            {visible.map((medicine, index) => {
               const low = medicine.stockQty <= medicine.reorderLevel;
               const days = daysUntil(medicine.expiryDate);
               return (
-                <tr key={medicine.id}>
+                <tr
+                  key={medicine.id}
+                  style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
+                  className={`row-hover animate-fade-up ${busyId === medicine.id ? "opacity-50" : ""}`}
+                >
                   <td className="px-4 py-3">
                     <p className="font-medium">{medicine.name}</p>
                     <p className="text-xs text-slate-500">
                       {medicine.genericName} · {medicine.manufacturer}
-                      {medicine.rxRequired ? " · Rx" : ""}
                     </p>
+                    {medicine.rxRequired && (
+                      <span className="mt-1 inline-block rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+                        Rx only
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">{medicine.batchNo}</td>
                   <td className={`px-4 py-3 ${days <= 90 ? "text-amber-600" : ""}`}>
@@ -153,7 +190,7 @@ export default function StockManager({
                         type="button"
                         aria-label={`Add stock to ${medicine.name}`}
                         onClick={() => adjustStock(medicine, 10)}
-                        className="rounded border border-slate-300 px-2 py-1 text-xs"
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs transition duration-200 hover:border-teal-400 hover:text-teal-700 active:scale-90"
                       >
                         +10
                       </button>
@@ -161,14 +198,14 @@ export default function StockManager({
                         type="button"
                         aria-label={`Reduce stock of ${medicine.name}`}
                         onClick={() => adjustStock(medicine, -10)}
-                        className="rounded border border-slate-300 px-2 py-1 text-xs"
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs transition duration-200 hover:border-amber-400 hover:text-amber-700 active:scale-90"
                       >
                         -10
                       </button>
                       <button
                         type="button"
                         onClick={() => removeMedicine(medicine.id)}
-                        className="rounded border border-rose-200 px-2 py-1 text-xs text-rose-600"
+                        className="rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 transition duration-200 hover:bg-rose-50 active:scale-90"
                       >
                         Delete
                       </button>
@@ -188,7 +225,7 @@ export default function StockManager({
         </table>
       </div>
 
-      <form onSubmit={addMedicine} className="rounded-lg border border-slate-200 bg-white p-5">
+      <form onSubmit={addMedicine} className="card p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Add medicine</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -212,7 +249,7 @@ export default function StockManager({
                 step={field.type === "number" ? "any" : undefined}
                 value={String(form[field.key as keyof typeof form] ?? "")}
                 onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                className="field"
               />
             </label>
           ))}
@@ -225,12 +262,9 @@ export default function StockManager({
             Prescription required
           </label>
         </div>
-        {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-4 rounded bg-teal-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-        >
+        {error && <p className="mt-3 animate-fade-up text-sm text-rose-600">{error}</p>}
+        <button type="submit" disabled={saving} className="btn-primary mt-4 inline-flex items-center gap-2">
+          {saving && <Spinner />}
           {saving ? "Saving..." : "Add to stock"}
         </button>
       </form>

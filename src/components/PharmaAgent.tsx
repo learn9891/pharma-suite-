@@ -41,8 +41,10 @@ export default function PharmaAgent({ llmConfigured }: { llmConfigured: boolean 
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">AI pharma assistant</h1>
+      <div className="animate-fade-up">
+        <h1 className="text-2xl font-semibold">
+          <span className="gradient-text">AI pharma assistant</span>
+        </h1>
         <p className="mt-1 text-sm text-slate-600">
           Ask about interactions, dosing, storage, substitution or counter operations. Answers are grounded in your own
           stock where relevant.
@@ -56,32 +58,45 @@ export default function PharmaAgent({ llmConfigured }: { llmConfigured: boolean 
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {PRESETS.map((preset) => (
+        {PRESETS.map((preset, index) => (
           <button
             key={preset}
             type="button"
             onClick={() => send(preset)}
-            className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs text-slate-700 hover:border-teal-500"
+            style={{ animationDelay: `${index * 80}ms` }}
+            className="animate-fade-up rounded-full border border-slate-300 bg-white/80 px-3 py-1 text-xs text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-teal-500 hover:text-teal-700 hover:shadow-sm active:scale-95"
           >
             {preset}
           </button>
         ))}
       </div>
 
-      <div className="min-h-[240px] space-y-4 rounded-lg border border-slate-200 bg-white p-5">
+      <div className="card min-h-[240px] space-y-4 p-5">
         {messages.length === 0 && <p className="text-sm text-slate-500">Ask your first question to start.</p>}
         {messages.map((message, index) => (
-          <div key={index} className={message.role === "user" ? "text-right" : ""}>
+          <div
+            key={index}
+            className={`${message.role === "user" ? "text-right animate-slide-in-right" : "animate-fade-up"}`}
+          >
             <div
-              className={`inline-block max-w-full whitespace-pre-wrap rounded-lg px-4 py-3 text-sm ${
-                message.role === "user" ? "bg-teal-700 text-white" : "bg-slate-100 text-slate-800"
+              className={`inline-block max-w-full whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm shadow-sm ${
+                message.role === "user"
+                  ? "rounded-br-sm bg-gradient-to-br from-teal-600 to-teal-500 text-white"
+                  : "rounded-bl-sm bg-slate-100 text-slate-800"
               }`}
             >
               {message.content}
             </div>
           </div>
         ))}
-        {loading && <p className="text-sm text-slate-500">Thinking...</p>}
+        {loading && (
+          <div className="flex items-center gap-1.5 text-sm text-slate-500" role="status">
+            <span className="h-2 w-2 animate-bounce-dot rounded-full bg-teal-500" />
+            <span className="h-2 w-2 animate-bounce-dot rounded-full bg-teal-500 [animation-delay:150ms]" />
+            <span className="h-2 w-2 animate-bounce-dot rounded-full bg-teal-500 [animation-delay:300ms]" />
+            <span className="ml-2">Thinking...</span>
+          </div>
+        )}
       </div>
 
       <form
@@ -95,9 +110,9 @@ export default function PharmaAgent({ llmConfigured }: { llmConfigured: boolean 
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Ask a pharmacy question"
-          className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition duration-200 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
         />
-        <button type="submit" disabled={loading} className="rounded bg-teal-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+        <button type="submit" disabled={loading} className="btn-primary">
           Ask
         </button>
       </form>

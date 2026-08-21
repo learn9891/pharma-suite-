@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Spinner from "@/components/Spinner";
 
 type AnalysedLine = {
   raw: string;
@@ -33,7 +34,7 @@ Dr. S. Iyer
 5. Cap Warf 5 mg OD`;
 
 const SEVERITY_STYLE = {
-  high: "border-rose-200 bg-rose-50 text-rose-800",
+  high: "border-rose-200 bg-rose-50 text-rose-800 animate-pulse-ring",
   moderate: "border-amber-200 bg-amber-50 text-amber-800",
   info: "border-slate-200 bg-slate-50 text-slate-700",
 } as const;
@@ -66,15 +67,17 @@ export default function PrescriptionAnalyser() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Prescription analyser</h1>
+      <div className="animate-fade-up">
+        <h1 className="text-2xl font-semibold">
+          <span className="gradient-text">Prescription analyser</span>
+        </h1>
         <p className="mt-1 text-sm text-slate-600">
           Paste or type the prescription. Each line is parsed into molecule, strength, frequency and duration, then checked
           for interactions, duplicate therapy and dose limits, and matched against your stock.
         </p>
       </div>
 
-      <form onSubmit={analyse} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
+      <form onSubmit={analyse} className="card animate-fade-up space-y-4 p-5" style={{ animationDelay: "80ms" }}>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm">
             <span className="block text-xs font-medium text-slate-600">Patient name</span>
@@ -82,7 +85,7 @@ export default function PrescriptionAnalyser() {
               required
               value={patientName}
               onChange={(event) => setPatientName(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             />
           </label>
           <label className="text-sm">
@@ -90,7 +93,7 @@ export default function PrescriptionAnalyser() {
             <input
               value={doctorName}
               onChange={(event) => setDoctorName(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             />
           </label>
         </div>
@@ -102,15 +105,12 @@ export default function PrescriptionAnalyser() {
             value={text}
             onChange={(event) => setText(event.target.value)}
             placeholder="Tab Dolo 650 mg 1-0-1 x 5 days"
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 font-mono text-sm"
+            className="field font-mono text-sm"
           />
         </label>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded bg-teal-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-          >
+          <button type="submit" disabled={loading} className="btn-primary inline-flex items-center gap-2">
+            {loading && <Spinner />}
             {loading ? "Analysing..." : "Analyse prescription"}
           </button>
           <button
@@ -120,23 +120,29 @@ export default function PrescriptionAnalyser() {
               setDoctorName("Dr. S. Iyer");
               setText(SAMPLE);
             }}
-            className="rounded border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="btn-ghost"
           >
             Load sample
           </button>
         </div>
-        {error && <p className="text-sm text-rose-600">{error}</p>}
+        {error && <p className="animate-fade-up text-sm text-rose-600">{error}</p>}
       </form>
 
       {analysis && (
         <div className="space-y-6">
-          <p className="rounded border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">{analysis.summary}</p>
+          <p className="animate-pop rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+            {analysis.summary}
+          </p>
 
           {analysis.warnings.length > 0 && (
             <section className="space-y-2">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Alerts</h2>
               {analysis.warnings.map((warning, index) => (
-                <div key={`${warning.title}-${index}`} className={`rounded border px-4 py-3 text-sm ${SEVERITY_STYLE[warning.severity]}`}>
+                <div
+                  key={`${warning.title}-${index}`}
+                  style={{ animationDelay: `${index * 70}ms` }}
+                  className={`animate-fade-up rounded-lg border px-4 py-3 text-sm ${SEVERITY_STYLE[warning.severity]}`}
+                >
                   <p className="font-medium capitalize">
                     {warning.severity !== "info" ? `${warning.severity} · ` : ""}
                     {warning.title}
@@ -147,9 +153,9 @@ export default function PrescriptionAnalyser() {
             </section>
           )}
 
-          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50/80 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Line</th>
                   <th className="px-4 py-3">Molecule</th>
@@ -161,7 +167,11 @@ export default function PrescriptionAnalyser() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {analysis.lines.map((line, index) => (
-                  <tr key={`${line.raw}-${index}`}>
+                  <tr
+                    key={`${line.raw}-${index}`}
+                    style={{ animationDelay: `${index * 60}ms` }}
+                    className="row-hover animate-fade-up"
+                  >
                     <td className="px-4 py-3 font-mono text-xs">{line.raw}</td>
                     <td className="px-4 py-3">
                       {line.generic ?? <span className="text-amber-600">unmatched</span>}
@@ -188,7 +198,10 @@ export default function PrescriptionAnalyser() {
             </table>
           </div>
 
-          <Link href="/billing" className="inline-block rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+          <Link
+            href="/billing"
+            className="inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+          >
             Create invoice for this patient
           </Link>
         </div>

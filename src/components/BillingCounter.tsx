@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { inr } from "@/lib/format";
+import Spinner from "@/components/Spinner";
+import AnimatedNumber from "@/components/AnimatedNumber";
 
 type BillableMedicine = {
   id: string;
@@ -105,31 +107,33 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
 
   return (
     <form onSubmit={checkout} className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Billing counter</h1>
+      <div className="animate-fade-up">
+        <h1 className="text-2xl font-semibold">
+          <span className="gradient-text">Billing counter</span>
+        </h1>
         <p className="mt-1 text-sm text-slate-600">Search stock, build the bill, and GST is applied per item.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <div className="card animate-fade-up p-5">
             <label className="block text-sm">
               <span className="block text-xs font-medium text-slate-600">Add medicine</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Type a brand or molecule"
-                className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                className="field"
               />
             </label>
             {matches.length > 0 && (
-              <ul className="mt-2 divide-y divide-slate-100 rounded border border-slate-200">
-                {matches.map((medicine) => (
-                  <li key={medicine.id}>
+              <ul className="mt-2 animate-fade-up divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200">
+                {matches.map((medicine, index) => (
+                  <li key={medicine.id} style={{ animationDelay: `${index * 40}ms` }} className="animate-fade-up">
                     <button
                       type="button"
                       onClick={() => addToCart(medicine)}
-                      className="flex w-full justify-between px-3 py-2 text-left text-sm hover:bg-slate-50"
+                      className="flex w-full justify-between px-3 py-2 text-left text-sm transition duration-200 hover:bg-teal-50/70 hover:pl-4"
                     >
                       <span>
                         {medicine.name}
@@ -145,9 +149,9 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
             )}
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50/80 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Item</th>
                   <th className="px-4 py-3">Rate</th>
@@ -160,7 +164,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
                 {cart.map((line) => {
                   const net = line.medicine.unitPrice * line.quantity;
                   return (
-                    <tr key={line.medicine.id}>
+                    <tr key={line.medicine.id} className="row-hover animate-fade-up">
                       <td className="px-4 py-3">
                         {line.medicine.name}
                         <span className="block text-xs text-slate-500">batch {line.medicine.batchNo}</span>
@@ -174,7 +178,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
                           value={line.quantity}
                           aria-label={`Quantity of ${line.medicine.name}`}
                           onChange={(event) => setQuantity(line.medicine.id, Number(event.target.value))}
-                          className="w-16 rounded border border-slate-300 px-2 py-1"
+                          className="w-16 rounded-md border border-slate-300 px-2 py-1 transition duration-200 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
                         />
                       </td>
                       <td className="px-4 py-3">{line.medicine.gstRate}%</td>
@@ -194,14 +198,14 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
           </div>
         </div>
 
-        <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
+        <div className="card animate-fade-up space-y-4 p-5" style={{ animationDelay: "120ms" }}>
           <label className="block text-sm">
             <span className="block text-xs font-medium text-slate-600">Customer name</span>
             <input
               required
               value={customerName}
               onChange={(event) => setCustomerName(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             />
           </label>
           <label className="block text-sm">
@@ -209,7 +213,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
             <input
               value={customerPhone}
               onChange={(event) => setCustomerPhone(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             />
           </label>
           <label className="block text-sm">
@@ -217,7 +221,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
             <input
               value={doctorName}
               onChange={(event) => setDoctorName(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             />
           </label>
           <label className="block text-sm">
@@ -225,7 +229,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
             <select
               value={paymentMode}
               onChange={(event) => setPaymentMode(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             >
               <option value="CASH">Cash</option>
               <option value="UPI">UPI</option>
@@ -239,7 +243,7 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
               min={0}
               value={discount}
               onChange={(event) => setDiscount(event.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="field"
             />
           </label>
 
@@ -258,16 +262,19 @@ export default function BillingCounter({ medicines }: { medicines: BillableMedic
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold">
               <dt>Total</dt>
-              <dd>{inr(totals.total)}</dd>
+              <dd className="text-teal-700">
+                <AnimatedNumber value={totals.total} format={inr} duration={500} />
+              </dd>
             </div>
           </dl>
 
-          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {error && <p className="animate-fade-up text-sm text-rose-600">{error}</p>}
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded bg-teal-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="btn-primary inline-flex w-full items-center justify-center gap-2"
           >
+            {saving && <Spinner />}
             {saving ? "Generating..." : "Generate invoice"}
           </button>
         </div>
