@@ -167,19 +167,21 @@ body {
   transform: translateY(30px) rotateZ(-9deg);
 }
 
+/* Only the outer end of a panel is rounded, so the seam stays a straight line. */
 .capsule-panel {
   position: absolute;
   left: 50%;
-  border-radius: 999px;
 }
 
 .capsule-panel-top {
   top: 0;
+  border-radius: 999px 999px 0 0;
   background: linear-gradient(to bottom, #f43f5e, #e11d48);
 }
 
 .capsule-panel-bottom {
   top: 51px;
+  border-radius: 0 0 999px 999px;
   background: linear-gradient(to bottom, #ffffff, #e2e8f0);
 }
 
